@@ -15,6 +15,7 @@ struct JENZENMenuView: View {
     @State private var key = ""
     @State private var unlocked = false
     @State private var error = false
+    @State private var showVPNAlert = false
 
     private let green = Color(
         red: 0.15, green: 1.0, blue: 0.42
@@ -40,6 +41,8 @@ struct JENZENMenuView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 24) {
+                Spacer()
+
                 Text("JENZEN")
                     .font(.system(size: 40, weight: .black))
                     .foregroundStyle(green)
@@ -88,21 +91,34 @@ struct JENZENMenuView: View {
                 Spacer()
             }
             .padding(28)
-            .padding(.top, 75)
+        }
+        .alert(
+            "ACTIVA EL VPN PARA CONTINUAR",
+            isPresented: $showVPNAlert
+        ) {
+            Button("ACEPTAR") {
+                if let url = URL(string: "App-Prefs:") {
+                    UIApplication.shared.open(url)
+                }
+            }
+
+            Button("CANCELAR", role: .cancel) {}
+        } message: {
+            Text("Activa tu VPN para continuar.")
         }
         .preferredColorScheme(.dark)
     }
 
     private func optionButton(_ title: String) -> some View {
         Button {
-            if let url = URL(string: "App-Prefs:") {
-                UIApplication.shared.open(url)
-            }
+            showVPNAlert = true
         } label: {
             HStack {
                 Text(title)
                     .font(.system(size: 15, weight: .heavy))
+
                 Spacer()
+
                 Image(systemName: "power")
             }
             .foregroundStyle(.black)
