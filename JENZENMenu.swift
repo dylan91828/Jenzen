@@ -1,7 +1,6 @@
 
 import SwiftUI
 import WebKit
-import UniformTypeIdentifiers
 
 private let verdeJenzen = Color(
     red: 0.15,
@@ -215,59 +214,25 @@ struct ProxyWebView: UIViewRepresentable {
 
     class Coordinator: NSObject,
                        WKNavigationDelegate,
-                       WKUIDelegate,
-                       WKDownloadDelegate {
-
-        private var descargas: [ObjectIdentifier: WKDownload] = [:]
+                       WKUIDelegate {
 
         func webView(
             _ webView: WKWebView,
-            navigationAction: WKNavigationAction,
-            didBecome download: WKDownload
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
         ) {
-            prepararDescarga(download)
-        }
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
+            }
 
-        func webView(
-            _ webView: WKWebView,
-            navigationResponse: WKNavigationResponse,
-            didBecome download: WKDownload
-        ) {
-            prepararDescarga(download)
-        }
+            if url.pathExtension.lowercased() == "mobileconfig" {
+                UIApplication.shared.open(url)
+                decisionHandler(.cancel)
+                return
+            }
 
-        private func prepararDescarga(_ download: WKDownload) {
-            download.delegate = self
-            descargas[ObjectIdentifier(download)] = download
-        }
-
-        func download(
-            _ download: WKDownload,
-            decideDestinationUsing response: URLResponse,
-            suggestedFilename: String,
-            completionHandler: @escaping (URL?) -> Void
-        ) {
-            let nombre = suggestedFilename.isEmpty
-                ? "perfil-descargado"
-                : suggestedFilename
-
-            let destino = FileManager.default.temporaryDirectory
-                .appendingPathComponent(nombre)
-
-            completionHandler(destino)
-        }
-
-        func downloadDidFinish(_ download: WKDownload) {
-            descargas.removeValue(forKey: ObjectIdentifier(download))
-        }
-
-        func download(
-            _ download: WKDownload,
-            didFailWithError error: Error,
-            resumeData: Data?
-        ) {
-            descargas.removeValue(forKey: ObjectIdentifier(download))
-            print("Error de descarga: \(error.localizedDescription)")
+            decisionHandler(.allow)
         }
 
         func webView(
