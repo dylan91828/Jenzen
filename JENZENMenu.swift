@@ -1,5 +1,6 @@
 
 import SwiftUI
+import UIKit
 
 @main
 struct JENZENApp: App {
@@ -12,10 +13,7 @@ struct JENZENApp: App {
 
 struct JENZENMenuView: View {
     @State private var menuOpen = false
-    @State private var aimbotNeckOn = false
-    @State private var espOn = false
     @State private var showVPNAlert = false
-    @State private var selectedOption = ""
 
     private let neonGreen = Color(
         red: 0.15, green: 1.0, blue: 0.42
@@ -56,9 +54,7 @@ struct JENZENMenuView: View {
                             .foregroundStyle(neonGreen)
 
                         optionButton("AIMBOT NECK")
-
                         Divider().overlay(.white.opacity(0.2))
-
                         optionButton("ESP")
                     }
                     .padding(18)
@@ -99,16 +95,15 @@ struct JENZENMenuView: View {
                     UIApplication.shared.open(url)
                 }
             }
-            Button("CANCELAR", role: .cancel) { }
+            Button("CANCELAR", role: .cancel) {}
         } message: {
-            Text("Abre los ajustes del iPhone para que puedas activar tu VPN.")
+            Text("Abre los ajustes del iPhone para activar tu VPN.")
         }
         .preferredColorScheme(.dark)
     }
 
     private func optionButton(_ title: String) -> some View {
         Button {
-            selectedOption = title
             showVPNAlert = true
         } label: {
             HStack {
