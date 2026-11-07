@@ -1,0 +1,47 @@
+name: Build JENZEN IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar XcodeGen
+        run: brew install xcodegen
+
+      - name: Crear proyecto iOS
+        run: |
+          cat > project.yml <<'EOF'
+          name: JENZEN
+          targets:
+            JENZEN:
+              type: application
+              platform: iOS
+              sources:
+                - JENZENMenu.swift
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: com.jenzen.menu
+                  GENERATE_INFOPLIST_FILE: YES
+                  IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+          EOF
+          xcodegen generate
+
+      - name: Compilar
+        run: |
+          xcodebuild -project JENZEN.xcodeproj -scheme JENZEN -configuration Release -sdk iphoneos -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+
+      - name: Crear IPA
+        run: |
+          mkdir Payload
+          cp -R build/Build/Products/Release-iphoneos/JENZEN.app Payload/
+          zip -r JENZEN.ipa Payload
+
+      - name: Guardar IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: JENZEN-IPA
+          path: JENZEN.ipa
