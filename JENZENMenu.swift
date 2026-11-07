@@ -87,6 +87,7 @@ struct JENZENMenuView: View {
                     }
 
                     Spacer()
+
                 } else if showBrowser {
                     HStack {
                         Text("PROXY JENZEN")
@@ -102,11 +103,8 @@ struct JENZENMenuView: View {
                     }
 
                     ProxyBrowser()
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(green, lineWidth: 1)
-                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+
                 } else {
                     Spacer()
 
@@ -121,7 +119,7 @@ struct JENZENMenuView: View {
                 }
             }
             .padding(25)
-            .padding(.top, 65)
+            .padding(.top, 55)
         }
         .alert(
             "ACTIVA EL VPN PARA CONTINUAR",
@@ -159,7 +157,42 @@ struct JENZENMenuView: View {
     }
 }
 
-struct ProxyBrowser: UIViewRepresentable {
+struct ProxyBrowser: View {
+    private let green = Color(
+        red: 0.15, green: 1.0, blue: 0.42
+    )
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Image(systemName: "shield.lefthalf.filled")
+
+                Text("PROXY JENZEN")
+                    .font(.system(size: 17, weight: .black))
+                    .tracking(2)
+
+                Spacer()
+
+                Circle()
+                    .fill(green)
+                    .frame(width: 9, height: 9)
+            }
+            .foregroundStyle(green)
+            .padding(16)
+            .background(.black)
+
+            ProxyWebView()
+        }
+        .background(.black)
+        .overlay {
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(green, lineWidth: 1)
+        }
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+struct ProxyWebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView()
         webView.backgroundColor = .black
