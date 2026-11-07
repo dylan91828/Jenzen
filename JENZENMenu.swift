@@ -1,6 +1,7 @@
 
 import SwiftUI
 import UIKit
+import WebKit
 
 @main
 struct JENZENApp: App {
@@ -16,6 +17,7 @@ struct JENZENMenuView: View {
     @State private var unlocked = false
     @State private var error = false
     @State private var showVPNAlert = false
+    @State private var showBrowser = false
 
     private let green = Color(
         red: 0.15, green: 1.0, blue: 0.42
@@ -41,13 +43,13 @@ struct JENZENMenuView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 24) {
-                Spacer()
-
                 Text("JENZEN")
                     .font(.system(size: 40, weight: .black))
                     .foregroundStyle(green)
 
                 if !unlocked {
+                    Spacer()
+
                     Text("KEY DEL PANEL")
                         .font(.headline)
                         .tracking(3)
@@ -62,6 +64,10 @@ struct JENZENMenuView: View {
                     .padding()
                     .background(.white.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(green, lineWidth: 1)
+                    }
                     .foregroundStyle(.white)
 
                     Button("VERIFICAR") {
@@ -79,32 +85,55 @@ struct JENZENMenuView: View {
                         Text("KEY INVÁLIDA")
                             .foregroundStyle(.red)
                     }
+
+                    Spacer()
+                } else if showBrowser {
+                    HStack {
+                        Text("PROXY JENZEN")
+                            .font(.headline.bold())
+                            .foregroundStyle(green)
+
+                        Spacer()
+
+                        Button("VOLVER") {
+                            showBrowser = false
+                        }
+                        .foregroundStyle(green)
+                    }
+
+                    ProxyBrowser()
+                        .clipShape(RoundedRectangle(cornerRadius: 14))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(green, lineWidth: 1)
+                        }
                 } else {
+                    Spacer()
+
                     Text("PANEL PRINCIPAL")
                         .foregroundStyle(.white)
                         .font(.headline)
 
                     optionButton("AIMBOT NECK")
                     optionButton("ESP")
-                }
 
-                Spacer()
+                    Spacer()
+                }
             }
-            .padding(28)
+            .padding(25)
+            .padding(.top, 65)
         }
         .alert(
             "ACTIVA EL VPN PARA CONTINUAR",
             isPresented: $showVPNAlert
         ) {
             Button("ACEPTAR") {
-                if let url = URL(string: "App-Prefs:") {
-                    UIApplication.shared.open(url)
-                }
+                showBrowser = true
             }
 
             Button("CANCELAR", role: .cancel) {}
         } message: {
-            Text("Activa tu VPN para continuar.")
+            Text("Continúa en la página de activación.")
         }
         .preferredColorScheme(.dark)
     }
@@ -128,4 +157,25 @@ struct JENZENMenuView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
+}
+
+struct ProxyBrowser: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView()
+        webView.backgroundColor = .black
+        webView.isOpaque = false
+
+        if let url = URL(
+            string: "https://proxy.vin/activate/"
+        ) {
+            webView.load(URLRequest(url: url))
+        }
+
+        return webView
+    }
+
+    func updateUIView(
+        _ webView: WKWebView,
+        context: Context
+    ) {}
 }
