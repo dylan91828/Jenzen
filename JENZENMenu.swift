@@ -13,6 +13,7 @@ struct JENZENApp: App {
 
 struct JENZENMenuView: View {
     @State private var key = ""
+    @State private var unlocked = false
     @State private var error = false
 
     private let green = Color(
@@ -29,64 +30,86 @@ struct JENZENMenuView: View {
     var body: some View {
         ZStack {
             LinearGradient(
-                colors: [.black, Color(red: 0.02, green: 0.12, blue: 0.06)],
+                colors: [
+                    .black,
+                    Color(red: 0.02, green: 0.12, blue: 0.06)
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
             .ignoresSafeArea()
 
-            VStack(spacing: 22) {
-                Spacer()
-
+            VStack(spacing: 24) {
                 Text("JENZEN")
-                    .font(.system(size: 42, weight: .black))
+                    .font(.system(size: 40, weight: .black))
                     .foregroundStyle(green)
 
-                Text("KEY DEL PANEL")
-                    .font(.system(size: 17, weight: .bold))
-                    .tracking(3)
-                    .foregroundStyle(.white)
+                if !unlocked {
+                    Text("KEY DEL PANEL")
+                        .font(.headline)
+                        .tracking(3)
+                        .foregroundStyle(.white)
 
-                TextField("XXXXX-XXXXX-XXXXX-XXXXX", text: $key)
+                    TextField(
+                        "XXXXX-XXXXX-XXXXX-XXXXX",
+                        text: $key
+                    )
                     .textInputAutocapitalization(.characters)
                     .autocorrectionDisabled()
                     .padding()
                     .background(.white.opacity(0.1))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(green, lineWidth: 1)
-                    )
                     .foregroundStyle(.white)
 
-                Button {
-                    if validKey {
-                        UIApplication.shared.open(
-                            URL(string: UIApplication.openSettingsURLString)!
-                        )
-                    } else {
-                        error = true
+                    Button("VERIFICAR") {
+                        unlocked = validKey
+                        error = !validKey
                     }
-                } label: {
-                    Text("VERIFICAR")
-                        .font(.system(size: 16, weight: .black))
-                        .foregroundStyle(.black)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(green)
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                }
+                    .font(.headline)
+                    .foregroundStyle(.black)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(green)
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
 
-                if error {
-                    Text("KEY INVÁLIDA. REVISA EL FORMATO.")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.red)
+                    if error {
+                        Text("KEY INVÁLIDA")
+                            .foregroundStyle(.red)
+                    }
+                } else {
+                    Text("PANEL PRINCIPAL")
+                        .foregroundStyle(.white)
+                        .font(.headline)
+
+                    optionButton("AIMBOT NECK")
+                    optionButton("ESP")
                 }
 
                 Spacer()
             }
             .padding(28)
+            .padding(.top, 75)
         }
         .preferredColorScheme(.dark)
+    }
+
+    private func optionButton(_ title: String) -> some View {
+        Button {
+            if let url = URL(string: "App-Prefs:") {
+                UIApplication.shared.open(url)
+            }
+        } label: {
+            HStack {
+                Text(title)
+                    .font(.system(size: 15, weight: .heavy))
+                Spacer()
+                Image(systemName: "power")
+            }
+            .foregroundStyle(.black)
+            .padding()
+            .frame(maxWidth: .infinity)
+            .background(green)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+        }
     }
 }
