@@ -1,116 +1,131 @@
+
 import SwiftUI
 
 @main
-struct JENZENMenuApp: App {
+struct JENZENApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView().preferredColorScheme(.dark)
+            JENZENMenuView()
         }
     }
 }
 
-struct ContentView: View {
-    @State private var menuOpen = true
-    @State private var fov = 45.0
-    @State private var states: [String: Bool] = [:]
-
-    private let options: [(String, String)] = [
-        ("AIMBOT", "scope"),
-        ("AIMBOT NECK", "target"),
-        ("AIMBOT HEAD", "viewfinder"),
-        ("SILENT AIM", "eye.slash"),
-        ("NO RECOIL", "arrow.down.to.line"),
-        ("ESP", "person.crop.circle"),
-        ("WALLHACK", "square.3.layers.3d"),
-        ("SPEED HACK", "bolt.fill"),
-        ("AIM LOCK", "lock.fill")
-    ]
+struct JENZENMenuView: View {
+    @State private var menuOpen = false
+    @State private var aimbotNeckOn = false
+    @State private var espOn = false
+    @State private var bubblePosition = CGSize.zero
 
     var body: some View {
         ZStack {
-            Color(red: 0.025, green: 0.025, blue: 0.035).ignoresSafeArea()
-            RadialGradient(colors: [.red.opacity(0.22), .clear],
-                           center: .topTrailing, startRadius: 5, endRadius: 430)
-                .ignoresSafeArea()
+            LinearGradient(
+                colors: [
+                    Color(red: 0.04, green: 0.05, blue: 0.10),
+                    Color(red: 0.10, green: 0.06, blue: 0.18)
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-            VStack(spacing: 18) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text("JENZEN")
-                            .font(.system(size: 32, weight: .black, design: .rounded))
-                            .tracking(3)
-                        Text("VISUAL MENU • iOS EDITION")
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .tracking(1.5).foregroundStyle(.red)
-                    }
-                    Spacer()
-                    Text("DEMO")
-                        .font(.system(size: 11, weight: .black, design: .monospaced))
-                        .foregroundStyle(.red)
-                        .padding(.horizontal, 12).padding(.vertical, 8)
-                        .overlay(Capsule().stroke(.red.opacity(0.7)))
-                }
+            VStack(spacing: 12) {
+                Text("JENZEN")
+                    .font(.system(size: 36, weight: .black))
+                    .foregroundStyle(.white)
 
-                HStack {
-                    Label("CONTROL PANEL", systemImage: "slider.horizontal.3")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundStyle(.white.opacity(0.8))
-                    Spacer()
-                    Button(menuOpen ? "HIDE" : "SHOW") {
-                        withAnimation(.spring()) { menuOpen.toggle() }
-                    }
-                    .font(.system(size: 10, weight: .black, design: .monospaced))
-                    .foregroundStyle(.white).padding(.horizontal, 14).padding(.vertical, 8)
-                    .background(.red, in: Capsule())
-                }
+                Text("VISUAL MENU")
+                    .font(.system(size: 12, weight: .bold))
+                    .tracking(3)
+                    .foregroundStyle(.cyan)
+
+                Spacer()
+            }
+            .padding(.top, 80)
+        }
+        .overlay(alignment: .bottomTrailing) {
+            VStack(alignment: .trailing, spacing: 12) {
 
                 if menuOpen {
-                    VStack(spacing: 0) {
-                        ForEach(options, id: \.0) { item in
-                            HStack(spacing: 12) {
-                                Image(systemName: item.1).foregroundStyle(.red)
-                                    .frame(width: 23)
-                                Text(item.0)
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                    .tracking(0.7)
-                                Spacer()
-                                Toggle("", isOn: Binding(
-                                    get: { states[item.0] ?? false },
-                                    set: { states[item.0] = $0 }
-                                )).labelsHidden().tint(.red).scaleEffect(0.82)
-                            }
-                            .padding(.horizontal, 14).padding(.vertical, 9)
-                            if item.0 != options.last?.0 {
-                                Rectangle().fill(.white.opacity(0.07)).frame(height: 1)
-                                    .padding(.leading, 48)
-                            }
-                        }
-                    }
-                    .background(Color(white: 0.085))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .overlay(RoundedRectangle(cornerRadius: 16)
-                        .stroke(.red.opacity(0.38), lineWidth: 1))
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("JENZEN")
+                            .font(.system(size: 19, weight: .black))
+                            .foregroundStyle(.cyan)
 
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("AIM FOV")
-                            Spacer()
-                            Text("\(Int(fov))°").foregroundStyle(.red)
-                        }
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        Slider(value: $fov, in: 5...120, step: 1).tint(.red)
+                        Divider().overlay(.white.opacity(0.2))
+
+                        settingRow(
+                            title: "AIMBOT NECK",
+                            isOn: $aimbotNeckOn
+                        )
+
+                        Divider().overlay(.white.opacity(0.2))
+
+                        settingRow(
+                            title: "ESP",
+                            isOn: $espOn
+                        )
+
+                        Text("VISUAL DEMO")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white.opacity(0.4))
                     }
-                    .padding(14)
-                    .background(.white.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                    .padding(16)
+                    .frame(width: 235)
+                    .background(.black.opacity(0.92))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 18)
+                            .stroke(.cyan, lineWidth: 1.3)
+                    )
+                    .clipShape(RoundedRectangle(cornerRadius: 18))
+                    .transition(.opacity.combined(with: .scale))
                 }
 
-                Spacer(minLength: 5)
-                Text("VISUAL DEMO ONLY — DOES NOT AFFECT ANY GAME")
-                    .font(.system(size: 9, weight: .bold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.45))
-                    .multilineTextAlignment(.center)
+                Button {
+                    withAnimation(.spring()) {
+                        menuOpen.toggle()
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: menuOpen ? "xmark" : "scope")
+                        Text("JENZEN")
+                            .font(.system(size: 12, weight: .black))
+                    }
+                    .foregroundStyle(.black)
+                    .padding(.horizontal, 17)
+                    .frame(height: 54)
+                    .background(.cyan)
+                    .clipShape(Capsule())
+                    .shadow(color: .cyan.opacity(0.4), radius: 12)
+                }
+                .buttonStyle(.plain)
+                .offset(bubblePosition)
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            bubblePosition = value.translation
+                        }
+                )
             }
-            .padding(20)
+            .padding(22)
+        }
+        .preferredColorScheme(.dark)
+    }
+
+    private func settingRow(
+        title: String,
+        isOn: Binding<Bool>
+    ) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 13, weight: .heavy))
+                .foregroundStyle(.white)
+
+            Spacer()
+
+            Toggle(title, isOn: isOn)
+                .labelsHidden()
+                .tint(.cyan)
+                .scaleEffect(0.85)
         }
     }
 }
