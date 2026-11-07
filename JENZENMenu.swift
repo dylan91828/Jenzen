@@ -1,6 +1,7 @@
 
 import SwiftUI
 import WebKit
+import UniformTypeIdentifiers
 
 private let verdeJenzen = Color(
     red: 0.15,
@@ -61,19 +62,16 @@ struct JENZENMenu: View {
                 .tracking(5)
                 .foregroundColor(.white)
 
-            TextField(
-                "XXXXX-XXXXX-XXXXX-XXXXX",
-                text: $key
-            )
-            .textInputAutocapitalization(.characters)
-            .autocorrectionDisabled()
-            .padding()
-            .background(Color.white.opacity(0.08))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(verdeJenzen, lineWidth: 1.5)
-            )
-            .foregroundColor(.white)
+            TextField("XXXXX-XXXXX-XXXXX-XXXXX", text: $key)
+                .textInputAutocapitalization(.characters)
+                .autocorrectionDisabled()
+                .padding()
+                .background(Color.white.opacity(0.08))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(verdeJenzen, lineWidth: 1.5)
+                )
+                .foregroundColor(.white)
 
             Button {
                 if keyValida {
@@ -114,7 +112,17 @@ struct JENZENMenu: View {
             Button {
                 mostrarProxy = true
             } label: {
-                boton("PROXY JENZEN")
+                Text("PROXY JENZEN")
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundColor(verdeJenzen)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 19)
+                    .background(Color.white.opacity(0.06))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(verdeJenzen, lineWidth: 1.5)
+                    )
+                    .cornerRadius(12)
             }
 
             Spacer()
@@ -127,21 +135,6 @@ struct JENZENMenu: View {
         .fullScreenCover(isPresented: $mostrarProxy) {
             ProxyJenzen()
         }
-    }
-
-    private func boton(_ titulo: String) -> some View {
-        Text(titulo)
-            .font(.system(size: 17, weight: .bold))
-            .foregroundColor(verdeJenzen)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 19)
-            .background(Color.white.opacity(0.06))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(verdeJenzen, lineWidth: 1.5)
-            )
-            .cornerRadius(12)
-            .contentShape(Rectangle())
     }
 }
 
@@ -189,11 +182,11 @@ struct ProxyJenzen: View {
 struct ProxyWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
-        let configuracion = WKWebViewConfiguration()
+        let config = WKWebViewConfiguration()
 
         let webView = WKWebView(
             frame: .zero,
-            configuration: configuracion
+            configuration: config
         )
 
         webView.navigationDelegate = context.coordinator
@@ -201,13 +194,10 @@ struct ProxyWebView: UIViewRepresentable {
         webView.allowsBackForwardNavigationGestures = true
 
         webView.scrollView.isScrollEnabled = true
-        webView.scrollView.minimumZoomScale = 1.0
-        webView.scrollView.maximumZoomScale = 3.0
-        webView.scrollView.bounces = true
+        webView.scrollView.minimumZoomScale = 1
+        webView.scrollView.maximumZoomScale = 3
 
-        if let url = URL(
-            string: "https://proxy.vin/activate/"
-        ) {
+        if let url = URL(string: "https://proxy.vin/activate/") {
             webView.load(URLRequest(url: url))
         }
 
@@ -225,54 +215,71 @@ struct ProxyWebView: UIViewRepresentable {
 
     class Coordinator: NSObject,
                        WKNavigationDelegate,
-                       WKUIDelegate {
+                       WKUIDelegate,
+                       WKDownloadDelegate {
 
-        // Abre enlaces que solicitan una ventana nueva.
+        private var descargas: [ObjectIdentifier: WKDownload] = [:]
+
+        func webView(
+            _ webView: WKWebView,
+            navigationAction: WKNavigationAction,
+            didBecome download: WKDownload
+        ) {
+            prepararDescarga(download)
+        }
+
+        func webView(
+            _ webView: WKWebView,
+            navigationResponse: WKNavigationResponse,
+            didBecome download: WKDownload
+        ) {
+            prepararDescarga(download)
+        }
+
+        private func prepararDescarga(_ download: WKDownload) {
+            download.delegate = self
+            descargas[ObjectIdentifier(download)] = download
+        }
+
+        func download(
+            _ download: WKDownload,
+            decideDestinationUsing response: URLResponse,
+            suggestedFilename: String,
+            completionHandler: @escaping (URL?) -> Void
+        ) {
+            let nombre = suggestedFilename.isEmpty
+                ? "perfil-descargado"
+                : suggestedFilename
+
+            let destino = FileManager.default.temporaryDirectory
+                .appendingPathComponent(nombre)
+
+            completionHandler(destino)
+        }
+
+        func downloadDidFinish(_ download: WKDownload) {
+            descargas.removeValue(forKey: ObjectIdentifier(download))
+        }
+
+        func download(
+            _ download: WKDownload,
+            didFailWithError error: Error,
+            resumeData: Data?
+        ) {
+            descargas.removeValue(forKey: ObjectIdentifier(download))
+            print("Error de descarga: \(error.localizedDescription)")
+        }
+
         func webView(
             _ webView: WKWebView,
             createWebViewWith configuration: WKWebViewConfiguration,
             for navigationAction: WKNavigationAction,
             windowFeatures: WKWindowFeatures
         ) -> WKWebView? {
-
             if let url = navigationAction.request.url {
-                abrirEnlace(url)
+                UIApplication.shared.open(url)
             }
-
             return nil
-        }
-
-        // Detecta enlaces a perfiles VPN y los abre en Safari.
-        func webView(
-            _ webView: WKWebView,
-            decidePolicyFor navigationAction: WKNavigationAction,
-            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
-        ) {
-            guard let url = navigationAction.request.url else {
-                decisionHandler(.allow)
-                return
-            }
-
-            let extensionArchivo =
-                url.pathExtension.lowercased()
-
-            if extensionArchivo == "mobileconfig" {
-                abrirEnlace(url)
-                decisionHandler(.cancel)
-                return
-            }
-
-            decisionHandler(.allow)
-        }
-
-        private func abrirEnlace(_ url: URL) {
-            DispatchQueue.main.async {
-                UIApplication.shared.open(
-                    url,
-                    options: [:],
-                    completionHandler: nil
-                )
-            }
         }
 
         func webView(
