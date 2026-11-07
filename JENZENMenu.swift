@@ -4,23 +4,23 @@ import UIKit
 import WebKit
 
 @main
-struct JENZENApp: App {
+struct DYLANApp: App {
     var body: some Scene {
         WindowGroup {
-            JENZENMenuView()
+            DYLANMenuView()
         }
     }
 }
 
-struct JENZENMenuView: View {
+struct DYLANMenuView: View {
     @State private var key = ""
     @State private var unlocked = false
     @State private var error = false
     @State private var showVPNAlert = false
     @State private var showBrowser = false
 
-    private let green = Color(
-        red: 0.15, green: 1.0, blue: 0.42
+    private let yellow = Color(
+        red: 1.0, green: 0.85, blue: 0.0
     )
 
     private var validKey: Bool {
@@ -35,7 +35,7 @@ struct JENZENMenuView: View {
             LinearGradient(
                 colors: [
                     .black,
-                    Color(red: 0.02, green: 0.12, blue: 0.06)
+                    Color(red: 0.12, green: 0.10, blue: 0.01)
                 ],
                 startPoint: .top,
                 endPoint: .bottom
@@ -43,9 +43,9 @@ struct JENZENMenuView: View {
             .ignoresSafeArea()
 
             VStack(spacing: 24) {
-                Text("JENZEN")
+                Text("DYLAN")
                     .font(.system(size: 40, weight: .black))
-                    .foregroundStyle(green)
+                    .foregroundStyle(yellow)
 
                 if !unlocked {
                     Spacer()
@@ -66,7 +66,7 @@ struct JENZENMenuView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .overlay {
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(green, lineWidth: 1)
+                            .stroke(yellow, lineWidth: 1)
                     }
                     .foregroundStyle(.white)
 
@@ -78,7 +78,7 @@ struct JENZENMenuView: View {
                     .foregroundStyle(.black)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(green)
+                    .background(yellow)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
 
                     if error {
@@ -90,16 +90,16 @@ struct JENZENMenuView: View {
 
                 } else if showBrowser {
                     HStack {
-                        Text("PROXY JENZEN")
+                        Text("DYLAN PROXY")
                             .font(.headline.bold())
-                            .foregroundStyle(green)
+                            .foregroundStyle(yellow)
 
                         Spacer()
 
                         Button("VOLVER") {
                             showBrowser = false
                         }
-                        .foregroundStyle(green)
+                        .foregroundStyle(yellow)
                     }
 
                     ProxyBrowser()
@@ -108,7 +108,7 @@ struct JENZENMenuView: View {
                 } else {
                     Spacer()
 
-                    Text("PANEL PRINCIPAL")
+                    Text("DYLAN PANEL")
                         .foregroundStyle(.white)
                         .font(.headline)
 
@@ -151,15 +151,15 @@ struct JENZENMenuView: View {
             .foregroundStyle(.black)
             .padding()
             .frame(maxWidth: .infinity)
-            .background(green)
+            .background(yellow)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
 }
 
 struct ProxyBrowser: View {
-    private let green = Color(
-        red: 0.15, green: 1.0, blue: 0.42
+    private let yellow = Color(
+        red: 1.0, green: 0.85, blue: 0.0
     )
 
     var body: some View {
@@ -167,17 +167,17 @@ struct ProxyBrowser: View {
             HStack {
                 Image(systemName: "shield.lefthalf.filled")
 
-                Text("PROXY JENZEN")
+                Text("DYLAN PROXY")
                     .font(.system(size: 17, weight: .black))
                     .tracking(2)
 
                 Spacer()
 
                 Circle()
-                    .fill(green)
+                    .fill(yellow)
                     .frame(width: 9, height: 9)
             }
-            .foregroundStyle(green)
+            .foregroundStyle(yellow)
             .padding(16)
             .background(.black)
 
@@ -186,7 +186,7 @@ struct ProxyBrowser: View {
         .background(.black)
         .overlay {
             RoundedRectangle(cornerRadius: 14)
-                .stroke(green, lineWidth: 1)
+                .stroke(yellow, lineWidth: 1)
         }
         .clipShape(RoundedRectangle(cornerRadius: 14))
     }
