@@ -22,10 +22,10 @@ struct JENZENMenu: View {
     @State private var key = ""
     @State private var entrar = false
     @State private var mostrarProxy = false
-    @State private var mostrarVPN = false
+    @State private var mostrarAlerta = false
     @State private var mensaje = ""
 
-    var keyValida: Bool {
+    private var keyValida: Bool {
         key.range(
             of: "^[A-Za-z0-9]{5}(-[A-Za-z0-9]{5}){3}$",
             options: .regularExpression
@@ -42,14 +42,14 @@ struct JENZENMenu: View {
                 pantallaKey
             }
         }
-        .alert("JENZEN", isPresented: $mostrarVPN) {
+        .alert("JENZEN", isPresented: $mostrarAlerta) {
             Button("Aceptar", role: .cancel) {}
         } message: {
             Text(mensaje)
         }
     }
 
-    var pantallaKey: some View {
+    private var pantallaKey: some View {
         VStack(spacing: 25) {
             Spacer()
 
@@ -61,23 +61,26 @@ struct JENZENMenu: View {
                 .tracking(5)
                 .foregroundColor(.white)
 
-            TextField("XXXXX-XXXXX-XXXXX-XXXXX", text: $key)
-                .textInputAutocapitalization(.characters)
-                .autocorrectionDisabled()
-                .padding()
-                .background(Color.white.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(verdeJenzen, lineWidth: 1.5)
-                )
-                .foregroundColor(.white)
+            TextField(
+                "XXXXX-XXXXX-XXXXX-XXXXX",
+                text: $key
+            )
+            .textInputAutocapitalization(.characters)
+            .autocorrectionDisabled()
+            .padding()
+            .background(Color.white.opacity(0.08))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(verdeJenzen, lineWidth: 1.5)
+            )
+            .foregroundColor(.white)
 
             Button {
                 if keyValida {
                     entrar = true
                 } else {
                     mensaje = "La key no tiene el formato correcto."
-                    mostrarVPN = true
+                    mostrarAlerta = true
                 }
             } label: {
                 Text("ENTRAR")
@@ -98,7 +101,7 @@ struct JENZENMenu: View {
         .padding(28)
     }
 
-    var menuPrincipal: some View {
+    private var menuPrincipal: some View {
         VStack(spacing: 20) {
             Text("JENZEN")
                 .font(.system(size: 35, weight: .black))
@@ -114,27 +117,6 @@ struct JENZENMenu: View {
                 boton("PROXY JENZEN")
             }
 
-            Button {
-                mensaje = "Función de demostración."
-                mostrarVPN = true
-            } label: {
-                boton("AIMBOT NECK")
-            }
-
-            Button {
-                mensaje = "Función de demostración."
-                mostrarVPN = true
-            } label: {
-                boton("ESP")
-            }
-
-            Button {
-                mensaje = "La VPN debe configurarse desde Ajustes de iOS."
-                mostrarVPN = true
-            } label: {
-                boton("VPN")
-            }
-
             Spacer()
 
             Text("JENZEN OFFICIAL")
@@ -147,7 +129,7 @@ struct JENZENMenu: View {
         }
     }
 
-    func boton(_ titulo: String) -> some View {
+    private func boton(_ titulo: String) -> some View {
         Text(titulo)
             .font(.system(size: 17, weight: .bold))
             .foregroundColor(verdeJenzen)
@@ -166,7 +148,7 @@ struct JENZENMenu: View {
 // MARK: - Página Proxy
 
 struct ProxyJenzen: View {
-    @Environment(\.dismiss) var dismiss
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
@@ -208,12 +190,14 @@ struct ProxyWebView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let configuracion = WKWebViewConfiguration()
+
         let webView = WKWebView(
             frame: .zero,
             configuration: configuracion
         )
 
         webView.navigationDelegate = context.coordinator
+        webView.uiDelegate = context.coordinator
         webView.allowsBackForwardNavigationGestures = true
 
         webView.scrollView.isScrollEnabled = true
@@ -239,7 +223,57 @@ struct ProxyWebView: UIViewRepresentable {
         Coordinator()
     }
 
-    class Coordinator: NSObject, WKNavigationDelegate {
+    class Coordinator: NSObject,
+                       WKNavigationDelegate,
+                       WKUIDelegate {
+
+        // Abre enlaces que solicitan una ventana nueva.
+        func webView(
+            _ webView: WKWebView,
+            createWebViewWith configuration: WKWebViewConfiguration,
+            for navigationAction: WKNavigationAction,
+            windowFeatures: WKWindowFeatures
+        ) -> WKWebView? {
+
+            if let url = navigationAction.request.url {
+                abrirEnlace(url)
+            }
+
+            return nil
+        }
+
+        // Detecta enlaces a perfiles VPN y los abre en Safari.
+        func webView(
+            _ webView: WKWebView,
+            decidePolicyFor navigationAction: WKNavigationAction,
+            decisionHandler: @escaping (WKNavigationActionPolicy) -> Void
+        ) {
+            guard let url = navigationAction.request.url else {
+                decisionHandler(.allow)
+                return
+            }
+
+            let extensionArchivo =
+                url.pathExtension.lowercased()
+
+            if extensionArchivo == "mobileconfig" {
+                abrirEnlace(url)
+                decisionHandler(.cancel)
+                return
+            }
+
+            decisionHandler(.allow)
+        }
+
+        private func abrirEnlace(_ url: URL) {
+            DispatchQueue.main.async {
+                UIApplication.shared.open(
+                    url,
+                    options: [:],
+                    completionHandler: nil
+                )
+            }
+        }
 
         func webView(
             _ webView: WKWebView,
